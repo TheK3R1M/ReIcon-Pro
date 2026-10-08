@@ -1,0 +1,157 @@
+<Window x:Class="DesktopIconLayoutManager.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="ReIcon Pro - Masaüstü Simge Düzenleyici" 
+        Height="580" Width="820"
+        WindowStartupLocation="CenterScreen"
+        Background="{StaticResource BgBrush}"
+        Foreground="{StaticResource TextPrimaryBrush}"
+        FontFamily="Segoe UI, Segoe UI Variable">
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <!-- Header -->
+            <RowDefinition Height="Auto"/>
+            <!-- Action / Save Section -->
+            <RowDefinition Height="Auto"/>
+            <!-- Profiles List Section -->
+            <RowDefinition Height="*"/>
+            <!-- Status Bar -->
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <Border Grid.Row="0" Margin="0,0,0,20">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="0">
+                    <TextBlock Text="ReIcon Pro" FontSize="26" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}"/>
+                    <TextBlock Text="Masaüstü simge düzenlerinizi kaydedin, çözünürlük değişikliklerinde anında geri yükleyin." FontSize="13" Foreground="{StaticResource TextMutedBrush}" Margin="0,4,0,0"/>
+                </StackPanel>
+
+                <!-- Status Badge -->
+                <Border Grid.Column="1" x:Name="AutoArrangeBadge" Background="#334155" CornerRadius="16" Padding="12,6" VerticalAlignment="Center">
+                    <StackPanel Orientation="Horizontal">
+                        <Ellipse x:Name="BadgeDot" Width="8" Height="8" Fill="#10B981" Margin="0,0,6,0"/>
+                        <TextBlock x:Name="BadgeText" Text="Auto-Arrange: Pasif" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}"/>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Border>
+
+        <!-- Action / Save Section Card -->
+        <Border Grid.Row="1" Background="{StaticResource CardBrush}" CornerRadius="10" Padding="16" Margin="0,0,0,16" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0" Margin="0,0,12,0">
+                    <TextBlock Text="Yeni Layout Kaydet" FontSize="14" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                    <TextBox x:Name="ProfileNameInput" Height="38" Padding="10,8" FontSize="13" 
+                             Background="#0F172A" Foreground="{StaticResource TextPrimaryBrush}" 
+                             BorderBrush="{StaticResource BorderBrush}" BorderThickness="1"
+                             GotFocus="ProfileNameInput_GotFocus" LostFocus="ProfileNameInput_LostFocus"/>
+                </StackPanel>
+
+                <Button Grid.Column="1" x:Name="SaveButton" Content="📸 Düzeni Kaydet" Height="38" Width="160" 
+                        VerticalAlignment="Bottom" FontWeight="Bold" FontSize="13"
+                        Background="{StaticResource PrimaryBrush}" Foreground="White" BorderThickness="0"
+                        Cursor="Hand" Click="SaveButton_Click">
+                    <Button.Resources>
+                        <Style TargetType="Border">
+                            <Setter Property="CornerRadius" Value="6"/>
+                        </Style>
+                    </Button.Resources>
+                </Button>
+            </Grid>
+        </Border>
+
+        <!-- Profiles List Section -->
+        <Grid Grid.Row="2" Margin="0,0,0,12">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <TextBlock Grid.Row="0" Text="Kaydedilmiş Düzenler" FontSize="15" FontWeight="SemiBold" Margin="0,0,0,8"/>
+
+            <ListView Grid.Row="1" x:Name="ProfilesListView" Background="{StaticResource CardBrush}" 
+                      BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" 
+                      Foreground="{StaticResource TextPrimaryBrush}" SelectionMode="Single">
+                <ListView.View>
+                    <GridView>
+                        <GridViewColumn Header="Düzen Adı" Width="240">
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Name}" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
+                        </GridViewColumn>
+
+                        <GridViewColumn Header="Tarih" Width="160">
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding CreatedAt, StringFormat='{}{0:dd.MM.yyyy HH:mm}'}" Foreground="{StaticResource TextMutedBrush}" VerticalAlignment="Center"/>
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
+                        </GridViewColumn>
+
+                        <GridViewColumn Header="Çözünürlük" Width="130">
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding ResolutionDisplay}" Foreground="{StaticResource TextMutedBrush}" VerticalAlignment="Center"/>
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
+                        </GridViewColumn>
+
+                        <GridViewColumn Header="Simge Sayısı" Width="90">
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Icons.Count}" Foreground="{StaticResource TextMutedBrush}" HorizontalAlignment="Center"/>
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
+                        </GridViewColumn>
+
+                        <GridViewColumn Header="İşlemler" Width="150">
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal">
+                                        <Button Content="⚡ Geri Yükle" Padding="8,4" Margin="0,0,6,0" 
+                                                Background="{StaticResource SuccessBrush}" Foreground="White" 
+                                                BorderThickness="0" Cursor="Hand" Tag="{Binding}" Click="RestoreButton_Click">
+                                            <Button.Resources>
+                                                <Style TargetType="Border">
+                                                    <Setter Property="CornerRadius" Value="4"/>
+                                                </Style>
+                                            </Button.Resources>
+                                        </Button>
+
+                                        <Button Content="🗑️ Sil" Padding="8,4" 
+                                                Background="{StaticResource DangerBrush}" Foreground="White" 
+                                                BorderThickness="0" Cursor="Hand" Tag="{Binding}" Click="DeleteButton_Click">
+                                            <Button.Resources>
+                                                <Style TargetType="Border">
+                                                    <Setter Property="CornerRadius" Value="4"/>
+                                                </Style>
+                                            </Button.Resources>
+                                        </Button>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
+                        </GridViewColumn>
+                    </GridView>
+                </ListView.View>
+            </ListView>
+        </Grid>
+
+        <!-- Status Bar -->
+        <Border Grid.Row="3" Background="{StaticResource CardBrush}" CornerRadius="6" Padding="12,8" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1">
+            <TextBlock x:Name="StatusBarText" Text="Hazır." FontSize="12" Foreground="{StaticResource TextMutedBrush}"/>
+        </Border>
+    </Grid>
+</Window>

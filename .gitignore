@@ -1,0 +1,21 @@
+# Visual Studio / .NET Build Artifacts
+bin/
+obj/
+publish/
+dist/
+*.user
+*.userosscache
+*.sln.docstates
+.vs/
+.idea/
+.vscode/
+
+# Logs and OS files
+*.log
+Thumbs.db
+Desktop.ini
+[Dd]esktop.ini
+$RECYCLE.BIN/
+
+# Gemini / Antigravity IDE local data
+.gemini/
