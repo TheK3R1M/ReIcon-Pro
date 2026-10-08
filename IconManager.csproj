@@ -8,6 +8,7 @@
     <UseWPF>true</UseWPF>
     <UseWindowsForms>true</UseWindowsForms>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>app.ico</ApplicationIcon>
     <AssemblyName>DesktopIconLayoutManager</AssemblyName>
     <RootNamespace>DesktopIconLayoutManager</RootNamespace>
     <Platforms>x64</Platforms>

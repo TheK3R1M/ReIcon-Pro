@@ -1,8 +1,13 @@
 using System;
 using System.Collections.Generic;
+using System.Drawing;
+using System.IO;
+using System.Linq;
 using System.Windows;
-using System.Windows.Media;
+using System.Windows.Controls;
+using System.Windows.Forms;
 using DesktopIconLayoutManager.Core.Engine;
+using DesktopIconLayoutManager.Core.Localization;
 using DesktopIconLayoutManager.Core.Models;
 using DesktopIconLayoutManager.Core.Win32;
 using Button = System.Windows.Controls.Button;
@@ -16,7 +21,9 @@ namespace DesktopIconLayoutManager
     {
         private readonly IconLayoutEngine _engine;
         private readonly StorageManager _storage;
-        private const string PlaceholderText = "Örn: Çalışma Düzeni / Oyun Düzeni";
+        private readonly NotifyIcon _notifyIcon;
+        private List<IconLayoutProfile> _allProfiles = new();
+        private bool _isExitTriggered = false;
 
         public MainWindow()
         {
@@ -24,26 +31,166 @@ namespace DesktopIconLayoutManager
             _engine = new IconLayoutEngine();
             _storage = new StorageManager();
 
-            SetPlaceholder();
+            // Setup System Tray NotifyIcon
+            _notifyIcon = new NotifyIcon
+            {
+                Text = "ReIcon Pro",
+                Visible = true
+            };
+
+            LoadAppIconToNotifyIcon();
+            BuildTrayMenu();
+
+            _notifyIcon.DoubleClick += (s, e) => ShowWindowFromTray();
+
+            LanguageManager.OnLanguageChanged += RefreshLocalizedUI;
+
+            RefreshLocalizedUI();
             CheckAutoArrangeState();
             LoadProfiles();
         }
 
+        private void LoadAppIconToNotifyIcon()
+        {
+            try
+            {
+                string iconPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "app.ico");
+                if (File.Exists(iconPath))
+                {
+                    _notifyIcon.Icon = new Icon(iconPath);
+                }
+                else
+                {
+                    _notifyIcon.Icon = SystemIcons.Application;
+                }
+            }
+            catch
+            {
+                _notifyIcon.Icon = SystemIcons.Application;
+            }
+        }
+
+        private void BuildTrayMenu()
+        {
+            var contextMenu = new ContextMenuStrip();
+
+            var openItem = new ToolStripMenuItem(LanguageManager.Get("TrayOpen"), null, (s, e) => ShowWindowFromTray());
+            var quickSaveItem = new ToolStripMenuItem(LanguageManager.Get("TrayQuickSave"), null, (s, e) => QuickSaveFromTray());
+            var restoreLastItem = new ToolStripMenuItem(LanguageManager.Get("TrayRestoreLast"), null, (s, e) => QuickRestoreLastFromTray());
+            var langItem = new ToolStripMenuItem("🌐 Language (Dil): " + LanguageManager.CurrentLanguage, null, (s, e) => ToggleLanguageFromTray());
+            var exitItem = new ToolStripMenuItem(LanguageManager.Get("TrayExit"), null, (s, e) => ExitApplication());
+
+            contextMenu.Items.Add(openItem);
+            contextMenu.Items.Add(new ToolStripSeparator());
+            contextMenu.Items.Add(quickSaveItem);
+            contextMenu.Items.Add(restoreLastItem);
+            contextMenu.Items.Add(new ToolStripSeparator());
+            contextMenu.Items.Add(langItem);
+            contextMenu.Items.Add(exitItem);
+
+            _notifyIcon.ContextMenuStrip = contextMenu;
+        }
+
+        private void ToggleLanguageFromTray()
+        {
+            var nextLang = LanguageManager.CurrentLanguage == AppLanguage.TR ? AppLanguage.EN : AppLanguage.TR;
+            LanguageManager.SetLanguage(nextLang);
+        }
+
+        private void ShowWindowFromTray()
+        {
+            Show();
+            WindowState = WindowState.Normal;
+            Activate();
+        }
+
+        private void ExitApplication()
+        {
+            _isExitTriggered = true;
+            _notifyIcon.Visible = false;
+            _notifyIcon.Dispose();
+            System.Windows.Application.Current.Shutdown();
+        }
+
+        private void RootWindow_StateChanged(object sender, EventArgs e)
+        {
+            if (WindowState == WindowState.Minimized)
+            {
+                Hide();
+                _notifyIcon.ShowBalloonTip(2000, "ReIcon Pro", LanguageManager.CurrentLanguage == AppLanguage.TR ? "Uygulama tepsisinde çalışmaya devam ediyor." : "Running in system tray.", ToolTipIcon.Info);
+            }
+        }
+
+        private void RootWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            if (!_isExitTriggered)
+            {
+                e.Cancel = true;
+                Hide();
+                _notifyIcon.ShowBalloonTip(2000, "ReIcon Pro", LanguageManager.CurrentLanguage == AppLanguage.TR ? "Uygulama arka planda simge durumuna küçültüldü." : "Minimized to system tray.", ToolTipIcon.Info);
+            }
+        }
+
+        private void RefreshLocalizedUI()
+        {
+            TxtAppTitle.Text = LanguageManager.Get("AppTitle");
+            TxtAppSubtitle.Text = LanguageManager.Get("AppSubtitle");
+            TxtNewLayoutTitle.Text = LanguageManager.Get("NewLayoutTitle");
+            SaveButton.Content = LanguageManager.Get("SaveButton");
+            TxtSavedProfilesTitle.Text = LanguageManager.Get("SavedProfilesTitle");
+            HeaderName.Content = LanguageManager.Get("ColName");
+            HeaderDate.Content = LanguageManager.Get("ColDate");
+            HeaderResolution.Content = LanguageManager.Get("ColResolution");
+            HeaderIcons.Content = LanguageManager.Get("ColIcons");
+            HeaderActions.Content = LanguageManager.Get("ColActions");
+            StatusBarText.Text = LanguageManager.Get("StatusReady");
+
+            if (LanguageManager.CurrentLanguage == AppLanguage.TR)
+            {
+                BtnLangTR.Background = new System.Windows.Media.SolidColorBrush((Color)ColorConverter.ConvertFromString("#6366F1"));
+                BtnLangTR.Foreground = System.Windows.Media.Brushes.White;
+                BtnLangEN.Background = System.Windows.Media.Brushes.Transparent;
+                BtnLangEN.Foreground = new System.Windows.Media.SolidColorBrush((Color)ColorConverter.ConvertFromString("#94A3B8"));
+            }
+            else
+            {
+                BtnLangEN.Background = new System.Windows.Media.SolidColorBrush((Color)ColorConverter.ConvertFromString("#6366F1"));
+                BtnLangEN.Foreground = System.Windows.Media.Brushes.White;
+                BtnLangTR.Background = System.Windows.Media.Brushes.Transparent;
+                BtnLangTR.Foreground = new System.Windows.Media.SolidColorBrush((Color)ColorConverter.ConvertFromString("#94A3B8"));
+            }
+
+            SetPlaceholder();
+            CheckAutoArrangeState();
+            BuildTrayMenu();
+        }
+
+        private void BtnLangTR_Click(object sender, RoutedEventArgs e)
+        {
+            LanguageManager.SetLanguage(AppLanguage.TR);
+        }
+
+        private void BtnLangEN_Click(object sender, RoutedEventArgs e)
+        {
+            LanguageManager.SetLanguage(AppLanguage.EN);
+        }
+
         private void SetPlaceholder()
         {
-            if (string.IsNullOrWhiteSpace(ProfileNameInput.Text))
+            if (string.IsNullOrWhiteSpace(ProfileNameInput.Text) || ProfileNameInput.Text == "Örn: Çalışma Düzeni / Oyun Düzeni" || ProfileNameInput.Text == "e.g. Work Layout / Gaming Layout")
             {
-                ProfileNameInput.Text = PlaceholderText;
-                ProfileNameInput.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#94A3B8"));
+                ProfileNameInput.Text = LanguageManager.Get("LayoutNamePlaceholder");
+                ProfileNameInput.Foreground = new System.Windows.Media.SolidColorBrush((Color)ColorConverter.ConvertFromString("#94A3B8"));
             }
         }
 
         private void ProfileNameInput_GotFocus(object sender, RoutedEventArgs e)
         {
-            if (ProfileNameInput.Text == PlaceholderText)
+            string ph = LanguageManager.Get("LayoutNamePlaceholder");
+            if (ProfileNameInput.Text == ph || ProfileNameInput.Text == "Örn: Çalışma Düzeni / Oyun Düzeni" || ProfileNameInput.Text == "e.g. Work Layout / Gaming Layout")
             {
                 ProfileNameInput.Text = string.Empty;
-                ProfileNameInput.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#F8FAFC"));
+                ProfileNameInput.Foreground = new System.Windows.Media.SolidColorBrush((Color)ColorConverter.ConvertFromString("#F8FAFC"));
             }
         }
 
@@ -59,44 +206,86 @@ namespace DesktopIconLayoutManager
 
             if (isAutoArrange)
             {
-                BadgeDot.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#EF4444"));
-                BadgeText.Text = "Auto-Arrange: Aktif (Geri yüklemede otomatik kapatılacaktır)";
+                BadgeDot.Fill = new System.Windows.Media.SolidColorBrush((Color)ColorConverter.ConvertFromString("#EF4444"));
+                BadgeText.Text = LanguageManager.Get("AutoArrangeActive");
             }
             else
             {
-                BadgeDot.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#10B981"));
-                BadgeText.Text = "Auto-Arrange: Pasif (Düzen kaydetmeye hazır)";
+                BadgeDot.Fill = new System.Windows.Media.SolidColorBrush((Color)ColorConverter.ConvertFromString("#10B981"));
+                BadgeText.Text = LanguageManager.Get("AutoArrangeDisabled");
             }
         }
 
         private void LoadProfiles()
         {
-            List<IconLayoutProfile> profiles = _storage.GetAllProfiles();
-            ProfilesListView.ItemsSource = profiles;
+            _allProfiles = _storage.GetAllProfiles();
+            ApplyFilter();
+        }
+
+        private void SearchInput_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            ApplyFilter();
+        }
+
+        private void ApplyFilter()
+        {
+            string query = SearchInput.Text?.Trim() ?? string.Empty;
+            if (string.IsNullOrEmpty(query))
+            {
+                ProfilesListView.ItemsSource = _allProfiles;
+            }
+            else
+            {
+                ProfilesListView.ItemsSource = _allProfiles.Where(p => p.Name.Contains(query, StringComparison.OrdinalIgnoreCase)).ToList();
+            }
         }
 
         private void SaveButton_Click(object sender, RoutedEventArgs e)
         {
+            PerformSave(ProfileNameInput.Text);
+        }
+
+        private void QuickSaveFromTray()
+        {
+            PerformSave(string.Empty);
+        }
+
+        private void PerformSave(string customName)
+        {
             try
             {
-                string inputName = ProfileNameInput.Text;
-                if (inputName == PlaceholderText || string.IsNullOrWhiteSpace(inputName))
+                string ph = LanguageManager.Get("LayoutNamePlaceholder");
+                if (customName == ph || string.IsNullOrWhiteSpace(customName))
                 {
-                    inputName = $"Düzen_{DateTime.Now:yyyyMMdd_HHmmss}";
+                    customName = $"Düzen_{DateTime.Now:yyyyMMdd_HHmmss}";
                 }
 
-                IconLayoutProfile profile = _engine.CaptureCurrentLayout(inputName);
+                IconLayoutProfile profile = _engine.CaptureCurrentLayout(customName);
                 _storage.SaveProfile(profile);
 
-                StatusBarText.Text = $"✅ '{profile.Name}' başarıyla kaydedildi ({profile.Icons.Count} simge).";
+                StatusBarText.Text = string.Format(LanguageManager.Get("SaveSuccess"), profile.Name, profile.Icons.Count);
+                _notifyIcon.ShowBalloonTip(2000, "ReIcon Pro", StatusBarText.Text, ToolTipIcon.Info);
+
                 ProfileNameInput.Text = string.Empty;
                 SetPlaceholder();
                 LoadProfiles();
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Layout kaydedilirken hata oluştu: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Kaydetme hatası: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
                 StatusBarText.Text = $"❌ Kaydetme hatası: {ex.Message}";
+            }
+        }
+
+        private void QuickRestoreLastFromTray()
+        {
+            if (_allProfiles.Count > 0)
+            {
+                PerformRestore(_allProfiles[0]);
+            }
+            else
+            {
+                _notifyIcon.ShowBalloonTip(2000, "ReIcon Pro", LanguageManager.CurrentLanguage == AppLanguage.TR ? "Kayıtlı düzen bulunamadı." : "No saved profiles found.", ToolTipIcon.Warning);
             }
         }
 
@@ -104,26 +293,32 @@ namespace DesktopIconLayoutManager
         {
             if (sender is Button btn && btn.Tag is IconLayoutProfile profile)
             {
-                try
-                {
-                    bool success = _engine.RestoreLayout(profile, out string msg);
-                    CheckAutoArrangeState();
+                PerformRestore(profile);
+            }
+        }
 
-                    if (success)
-                    {
-                        StatusBarText.Text = $"⚡ '{profile.Name}' geri yüklendi. {msg}";
-                        MessageBox.Show($"Düzen başarıyla geri yüklendi!\n{msg}", "Başarılı", MessageBoxButton.OK, MessageBoxImage.Information);
-                    }
-                    else
-                    {
-                        StatusBarText.Text = $"❌ Geri yükleme hatası: {msg}";
-                        MessageBox.Show($"Geri yükleme tamamlanamadı: {msg}", "Hata", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    }
-                }
-                catch (Exception ex)
+        private void PerformRestore(IconLayoutProfile profile)
+        {
+            try
+            {
+                bool success = _engine.RestoreLayout(profile, out string msg);
+                CheckAutoArrangeState();
+
+                if (success)
                 {
-                    MessageBox.Show($"Restorasyon sırasında beklenmeyen hata: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
+                    StatusBarText.Text = string.Format(LanguageManager.Get("RestoreSuccess"), profile.Name, msg);
+                    _notifyIcon.ShowBalloonTip(2000, "ReIcon Pro", StatusBarText.Text, ToolTipIcon.Info);
+                    MessageBox.Show(StatusBarText.Text, "ReIcon Pro", MessageBoxButton.OK, MessageBoxImage.Information);
                 }
+                else
+                {
+                    StatusBarText.Text = $"❌ Geri yükleme hatası: {msg}";
+                    MessageBox.Show($"Geri yükleme tamamlanamadı: {msg}", "Hata", MessageBoxButton.OK, MessageBoxImage.Warning);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Restorasyon sırasında beklenmeyen hata: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -131,11 +326,11 @@ namespace DesktopIconLayoutManager
         {
             if (sender is Button btn && btn.Tag is IconLayoutProfile profile)
             {
-                var result = MessageBox.Show($"'{profile.Name}' profilini silmek istediğinize emin misiniz?", "Profil Sil", MessageBoxButton.YesNo, MessageBoxImage.Question);
+                var result = MessageBox.Show(string.Format(LanguageManager.Get("DeleteConfirmMsg"), profile.Name), LanguageManager.Get("DeleteConfirmTitle"), MessageBoxButton.YesNo, MessageBoxImage.Question);
                 if (result == MessageBoxResult.Yes)
                 {
                     _storage.DeleteProfile(profile.Id);
-                    StatusBarText.Text = $"🗑️ '{profile.Name}' düzeni silindi.";
+                    StatusBarText.Text = string.Format(LanguageManager.Get("DeleteSuccess"), profile.Name);
                     LoadProfiles();
                 }
             }
