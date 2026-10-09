@@ -16,22 +16,59 @@ namespace DesktopIconLayoutManager.Core.Localization
 
         private static readonly Dictionary<string, (string TR, string EN)> Translations = new()
         {
-            ["AppTitle"] = ("ReIcon Pro - Masaüstü Simge Yöneticisi", "ReIcon Pro - Desktop Icon Manager"),
-            ["AppSubtitle"] = ("Masaüstü simge düzenlerinizi kaydedin, çözünürlük değişikliklerinde anında geri yükleyin.", "Save desktop icon layouts and instantly restore them across display changes."),
-            ["AutoArrangeActive"] = ("Auto-Arrange: Aktif (Geri yüklemede kapatılır)", "Auto-Arrange: Active (Disabled on restore)"),
-            ["AutoArrangeDisabled"] = ("Auto-Arrange: Pasif (Hazır)", "Auto-Arrange: Disabled (Ready)"),
-            ["NewLayoutTitle"] = ("Yeni Düzen Kaydet", "Save New Layout"),
-            ["LayoutNamePlaceholder"] = ("Örn: Çalışma Düzeni / Oyun Düzeni", "e.g. Work Layout / Gaming Layout"),
+            ["AppTitle"] = ("ReIcon Pro", "ReIcon Pro"),
+            ["AppSubtitle"] = ("Masaüstü Simge & Çözünürlük Yöneticisi", "Desktop Icon & Layout Manager"),
+            
+            // Navigation Tabs
+            ["NavProfiles"] = ("📑 Düzenler", "📑 Profiles"),
+            ["NavTools"] = ("⚡ Hızlı Araçlar", "⚡ Quick Tools"),
+            ["NavSettings"] = ("⚙️ Ayarlar", "⚙️ Settings"),
+            ["NavAbout"] = ("ℹ️ Hakkında", "ℹ️ About"),
+
+            // Profiles View
+            ["NewLayoutTitle"] = ("Yeni Düzen Oluştur", "Create New Layout"),
+            ["LayoutNamePlaceholder"] = ("Örn: İş Düzeni / Oyun Modu", "e.g. Work Layout / Gaming Mode"),
             ["SaveButton"] = ("📸 Düzeni Kaydet", "📸 Save Layout"),
-            ["SearchPlaceholder"] = ("Düzenlerde ara...", "Search profiles..."),
-            ["SavedProfilesTitle"] = ("Kaydedilmiş Düzenler", "Saved Layouts"),
-            ["ColName"] = ("Düzen Adı", "Layout Name"),
-            ["ColDate"] = ("Tarih", "Date"),
-            ["ColResolution"] = ("Çözünürlük", "Resolution"),
-            ["ColIcons"] = ("Simge", "Icons"),
-            ["ColActions"] = ("İşlemler", "Actions"),
-            ["BtnRestore"] = ("⚡ Geri Yükle", "⚡ Restore"),
+            ["SearchPlaceholder"] = ("Düzen adında ara...", "Search layout names..."),
+            ["SavedProfilesTitle"] = ("Kayıtlı Masaüstü Düzenleri", "Saved Desktop Layouts"),
+            ["BtnRestore"] = ("⚡ Yükle", "⚡ Restore"),
             ["BtnDelete"] = ("🗑️ Sil", "🗑️ Delete"),
+            ["EmptyProfiles"] = ("Henüz kayıtlı bir masaüstü düzeni yok. Yukarıdan 'Düzeni Kaydet' butonuna basarak ilk profilinizi oluşturun.", "No saved layouts yet. Click 'Save Layout' above to capture your first layout."),
+
+            // Quick Tools View
+            ["ToolsTitle"] = ("Masaüstü & Ekran Araçları", "Desktop & Display Tools"),
+            ["ToolsSubtitle"] = ("Windows masaüstünü hızla yönetmek için yerleşik Win32 yardımcıları.", "Native Win32 utilities for managing your Windows desktop on the fly."),
+            ["BtnDesktopRefresh"] = ("🔄 Masaüstünü Yenile", "🔄 Refresh Desktop"),
+            ["DescDesktopRefresh"] = ("Explorer masaüstü penceresine redraw mesajı göndererek simge önbelleğini yeniler.", "Sends redraw messages to Explorer desktop window to refresh icon cache."),
+            ["BtnToggleAutoArrange"] = ("🎯 Otomatik Düzenlemeyi Değiştir", "🎯 Toggle Auto-Arrange"),
+            ["DescAutoArrange"] = ("Windows'un simgeleri zorunlu sıralama modunu açar veya kapatır.", "Toggles Windows automatic icon repositioning mode on or off."),
+            ["DisplayInfoTitle"] = ("Ekran & Monitör Durumu", "Display & Monitor Info"),
+            ["PrimaryRes"] = ("Ana Monitör Çözünürlüğü:", "Primary Screen Resolution:"),
+            ["VirtualRes"] = ("Sanal Ekran Toplam Alanı:", "Virtual Screen Total Area:"),
+            ["MonitorCount"] = ("Algılanan Monitör Sayısı:", "Detected Monitors:"),
+
+            // Settings View
+            ["SettingsTitle"] = ("Uygulama Ayarları", "Application Settings"),
+            ["SettingsSubtitle"] = ("ReIcon Pro davranışlarını ve başlangıç tercihlerini yapılandırın.", "Configure ReIcon Pro startup preferences and behavior."),
+            ["SettingStartWithWindows"] = ("Windows Başlangıcında Çalıştır", "Start with Windows"),
+            ["DescStartWithWindows"] = ("Bilgisayar her açıldığında ReIcon Pro arka planda otomatik başlasın.", "Automatically start ReIcon Pro in the background on system boot."),
+            ["SettingMinimizeToTray"] = ("Kapatınca Sistem Tepsisine Küçült", "Minimize to System Tray on Close"),
+            ["DescMinimizeToTray"] = ("Pencereyi kapattığınızda uygulama tamamen çıkmak yerine saat yanında çalışır.", "Keep running in notification tray when window is closed instead of quitting."),
+            ["SettingShowNotifications"] = ("Masaüstü Bildirimlerini Göster", "Show Desktop Notifications"),
+            ["DescShowNotifications"] = ("Kayıt ve geri yükleme işlemlerinde tepsi balon bildirimi göster.", "Show notification balloons when saving or restoring layouts."),
+            ["SettingAutoBackup"] = ("Çözünürlük Değişince Otomatik Yedek Al", "Auto-Backup on Resolution Change"),
+            ["DescAutoBackup"] = ("Ekran çözünürlüğü veya monitör sayısı değiştiğinde otomatik yedek kaydeder.", "Automatically save a snapshot when screen resolution or monitors change."),
+            ["BtnOpenFolder"] = ("📁 Profil Klasörünü Aç", "📁 Open Profiles Folder"),
+            ["BtnClearAll"] = ("⚠️ Tüm Kayıtları Sıfırla", "⚠️ Wipe All Layouts"),
+
+            // About View
+            ["AboutTitle"] = ("ReIcon Pro Hakkında", "About ReIcon Pro"),
+            ["AboutDesc"] = ("Windows 10 ve 11 için geliştirilmiş, hafif, taşınabilir ve sıfır bağımlılıklı masaüstü simge yöneticisi.", "Lightweight, portable, and zero-dependency desktop icon layout manager for Windows 10 & 11."),
+            ["AboutVersion"] = ("Sürüm: 2.0.0 (Fluent Glass Edition)", "Version: 2.0.0 (Fluent Glass Edition)"),
+            ["AboutDev"] = ("Geliştirici: TheK3R1M", "Developer: TheK3R1M"),
+            ["BtnGithub"] = ("🌐 GitHub Repository", "🌐 GitHub Repository"),
+
+            // System Tray & Status
             ["TrayOpen"] = ("📱 Göster", "📱 Open ReIcon Pro"),
             ["TrayQuickSave"] = ("📸 Hızlı Kaydet", "📸 Quick Save"),
             ["TrayRestoreLast"] = ("⚡ Son Düzeni Yükle", "⚡ Restore Last Layout"),

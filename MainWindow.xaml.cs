@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -21,6 +22,7 @@ namespace DesktopIconLayoutManager
     {
         private readonly IconLayoutEngine _engine;
         private readonly StorageManager _storage;
+        private readonly SettingsManager _settingsManager;
         private readonly NotifyIcon _notifyIcon;
         private List<IconLayoutProfile> _allProfiles = new();
         private bool _isExitTriggered = false;
@@ -30,11 +32,12 @@ namespace DesktopIconLayoutManager
             InitializeComponent();
             _engine = new IconLayoutEngine();
             _storage = new StorageManager();
+            _settingsManager = new SettingsManager();
 
-            // Setup System Tray NotifyIcon
+            // Setup System Tray
             _notifyIcon = new NotifyIcon
             {
-                Text = "ReIcon Pro",
+                Text = "ReIcon Pro v2.0",
                 Visible = true
             };
 
@@ -43,10 +46,22 @@ namespace DesktopIconLayoutManager
 
             _notifyIcon.DoubleClick += (s, e) => ShowWindowFromTray();
 
+            // Set initial language from settings
+            if (_settingsManager.CurrentSettings.Language == "EN")
+            {
+                LanguageManager.SetLanguage(AppLanguage.EN);
+            }
+            else
+            {
+                LanguageManager.SetLanguage(AppLanguage.TR);
+            }
+
             LanguageManager.OnLanguageChanged += RefreshLocalizedUI;
 
+            LoadSettingsIntoUI();
             RefreshLocalizedUI();
             CheckAutoArrangeState();
+            UpdateDisplayInfoUI();
             LoadProfiles();
         }
 
@@ -85,14 +100,13 @@ namespace DesktopIconLayoutManager
 
         private void ShowTrayNotification(string title, string text, ToolTipIcon icon = ToolTipIcon.Info)
         {
+            if (!_settingsManager.CurrentSettings.ShowNotifications) return;
+
             try
             {
                 _notifyIcon.ShowBalloonTip(2000, title, text, icon);
             }
-            catch
-            {
-                // Safe fallback for Windows 11 notifications
-            }
+            catch { }
         }
 
         private void BuildTrayMenu()
@@ -102,7 +116,7 @@ namespace DesktopIconLayoutManager
             var openItem = new ToolStripMenuItem(LanguageManager.Get("TrayOpen"), null, (s, e) => ShowWindowFromTray());
             var quickSaveItem = new ToolStripMenuItem(LanguageManager.Get("TrayQuickSave"), null, (s, e) => QuickSaveFromTray());
             var restoreLastItem = new ToolStripMenuItem(LanguageManager.Get("TrayRestoreLast"), null, (s, e) => QuickRestoreLastFromTray());
-            var langItem = new ToolStripMenuItem("🌐 Language (Dil): " + LanguageManager.CurrentLanguage, null, (s, e) => ToggleLanguageFromTray());
+            var langItem = new ToolStripMenuItem("🌐 Dil / Language: " + LanguageManager.CurrentLanguage, null, (s, e) => ToggleLanguageFromTray());
             var exitItem = new ToolStripMenuItem(LanguageManager.Get("TrayExit"), null, (s, e) => ExitApplication());
 
             contextMenu.Items.Add(openItem);
@@ -120,6 +134,8 @@ namespace DesktopIconLayoutManager
         {
             var nextLang = LanguageManager.CurrentLanguage == AppLanguage.TR ? AppLanguage.EN : AppLanguage.TR;
             LanguageManager.SetLanguage(nextLang);
+            _settingsManager.CurrentSettings.Language = nextLang.ToString();
+            _settingsManager.SaveSettings();
         }
 
         private void ShowWindowFromTray()
@@ -139,50 +155,133 @@ namespace DesktopIconLayoutManager
 
         private void RootWindow_StateChanged(object sender, EventArgs e)
         {
-            if (WindowState == WindowState.Minimized)
+            if (WindowState == WindowState.Minimized && _settingsManager.CurrentSettings.MinimizeToTray)
             {
                 Hide();
-                ShowTrayNotification("ReIcon Pro", LanguageManager.CurrentLanguage == AppLanguage.TR ? "Uygulama tepsisinde çalışmaya devam ediyor." : "Running in system tray.");
+                ShowTrayNotification("ReIcon Pro", LanguageManager.CurrentLanguage == AppLanguage.TR ? "Uygulama arka planda simge durumuna küçültüldü." : "Minimized to notification tray.");
             }
         }
 
         private void RootWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
-            if (!_isExitTriggered)
+            if (!_isExitTriggered && _settingsManager.CurrentSettings.MinimizeToTray)
             {
                 e.Cancel = true;
                 Hide();
-                ShowTrayNotification("ReIcon Pro", LanguageManager.CurrentLanguage == AppLanguage.TR ? "Uygulama arka planda simge durumuna küçültüldü." : "Minimized to system tray.");
+                ShowTrayNotification("ReIcon Pro", LanguageManager.CurrentLanguage == AppLanguage.TR ? "Uygulama saat yanında çalışmaya devam ediyor." : "Running in background tray.");
             }
         }
 
+        // ================= NAVIGATION SWITCHING =================
+        private void NavBtnProfiles_Click(object sender, RoutedEventArgs e)
+        {
+            SwitchTab(0);
+        }
+
+        private void NavBtnTools_Click(object sender, RoutedEventArgs e)
+        {
+            SwitchTab(1);
+            UpdateDisplayInfoUI();
+        }
+
+        private void NavBtnSettings_Click(object sender, RoutedEventArgs e)
+        {
+            SwitchTab(2);
+        }
+
+        private void NavBtnAbout_Click(object sender, RoutedEventArgs e)
+        {
+            SwitchTab(3);
+        }
+
+        private void SwitchTab(int tabIndex)
+        {
+            ViewProfiles.Visibility = tabIndex == 0 ? Visibility.Visible : Visibility.Collapsed;
+            ViewTools.Visibility = tabIndex == 1 ? Visibility.Visible : Visibility.Collapsed;
+            ViewSettings.Visibility = tabIndex == 2 ? Visibility.Visible : Visibility.Collapsed;
+            ViewAbout.Visibility = tabIndex == 3 ? Visibility.Visible : Visibility.Collapsed;
+
+            var activeBg = (System.Windows.Media.Brush)FindResource("CardBg");
+            var transparentBg = System.Windows.Media.Brushes.Transparent;
+            var activeFg = (System.Windows.Media.Brush)FindResource("TextPrimary");
+            var inactiveFg = (System.Windows.Media.Brush)FindResource("TextSecondary");
+
+            NavBtnProfiles.Background = tabIndex == 0 ? activeBg : transparentBg;
+            NavBtnProfiles.Foreground = tabIndex == 0 ? activeFg : inactiveFg;
+
+            NavBtnTools.Background = tabIndex == 1 ? activeBg : transparentBg;
+            NavBtnTools.Foreground = tabIndex == 1 ? activeFg : inactiveFg;
+
+            NavBtnSettings.Background = tabIndex == 2 ? activeBg : transparentBg;
+            NavBtnSettings.Foreground = tabIndex == 2 ? activeFg : inactiveFg;
+
+            NavBtnAbout.Background = tabIndex == 3 ? activeBg : transparentBg;
+            NavBtnAbout.Foreground = tabIndex == 3 ? activeFg : inactiveFg;
+        }
+
+        // ================= LOCALIZATION =================
         private void RefreshLocalizedUI()
         {
-            TxtAppTitle.Text = LanguageManager.Get("AppTitle");
-            TxtAppSubtitle.Text = LanguageManager.Get("AppSubtitle");
+            // Navigation
+            TxtNavProfiles.Text = LanguageManager.Get("NavProfiles");
+            TxtNavTools.Text = LanguageManager.Get("NavTools");
+            TxtNavSettings.Text = LanguageManager.Get("NavSettings");
+            TxtNavAbout.Text = LanguageManager.Get("NavAbout");
+
+            // Profiles Page
+            TxtProfilesHeader.Text = LanguageManager.Get("SavedProfilesTitle");
             TxtNewLayoutTitle.Text = LanguageManager.Get("NewLayoutTitle");
             SaveButton.Content = LanguageManager.Get("SaveButton");
-            TxtSavedProfilesTitle.Text = LanguageManager.Get("SavedProfilesTitle");
-            HeaderName.Content = LanguageManager.Get("ColName");
-            HeaderDate.Content = LanguageManager.Get("ColDate");
-            HeaderResolution.Content = LanguageManager.Get("ColResolution");
-            HeaderIcons.Content = LanguageManager.Get("ColIcons");
-            HeaderActions.Content = LanguageManager.Get("ColActions");
+            TxtSavedLayoutsCount.Text = LanguageManager.Get("NavProfiles");
+            TxtEmptyNotice.Text = LanguageManager.Get("EmptyProfiles");
+
+            // Tools Page
+            TxtToolsHeader.Text = LanguageManager.Get("ToolsTitle");
+            TxtToolsSubheader.Text = LanguageManager.Get("ToolsSubtitle");
+            TxtToolRefreshTitle.Text = LanguageManager.Get("BtnDesktopRefresh");
+            TxtToolRefreshDesc.Text = LanguageManager.Get("DescDesktopRefresh");
+            TxtToolAutoArrangeTitle.Text = LanguageManager.Get("BtnToggleAutoArrange");
+            TxtToolAutoArrangeDesc.Text = LanguageManager.Get("DescAutoArrange");
+            TxtDisplayInfoTitle.Text = LanguageManager.Get("DisplayInfoTitle");
+            TxtLblPrimaryRes.Text = LanguageManager.Get("PrimaryRes");
+            TxtLblVirtualRes.Text = LanguageManager.Get("VirtualRes");
+            TxtLblMonitorCount.Text = LanguageManager.Get("MonitorCount");
+
+            // Settings Page
+            TxtSettingsHeader.Text = LanguageManager.Get("SettingsTitle");
+            TxtSettingsSubheader.Text = LanguageManager.Get("SettingsSubtitle");
+            TxtSettingStartTitle.Text = LanguageManager.Get("SettingStartWithWindows");
+            TxtSettingStartDesc.Text = LanguageManager.Get("DescStartWithWindows");
+            TxtSettingMinimizeTitle.Text = LanguageManager.Get("SettingMinimizeToTray");
+            TxtSettingMinimizeDesc.Text = LanguageManager.Get("DescMinimizeToTray");
+            TxtSettingNotifTitle.Text = LanguageManager.Get("SettingShowNotifications");
+            TxtSettingNotifDesc.Text = LanguageManager.Get("DescShowNotifications");
+            TxtSettingAutoBackupTitle.Text = LanguageManager.Get("SettingAutoBackup");
+            TxtSettingAutoBackupDesc.Text = LanguageManager.Get("DescAutoBackup");
+            BtnOpenFolder.Content = LanguageManager.Get("BtnOpenFolder");
+            BtnClearAll.Content = LanguageManager.Get("BtnClearAll");
+
+            // About Page
+            TxtAboutVersion.Text = LanguageManager.Get("AboutVersion");
+            TxtAboutDesc.Text = LanguageManager.Get("AboutDesc");
+            TxtAboutDev.Text = LanguageManager.Get("AboutDev");
+
+            // Status Bar
             StatusBarText.Text = LanguageManager.Get("StatusReady");
 
             if (LanguageManager.CurrentLanguage == AppLanguage.TR)
             {
-                BtnLangTR.Background = new System.Windows.Media.SolidColorBrush((Color)ColorConverter.ConvertFromString("#6366F1"));
+                BtnLangTR.Background = (System.Windows.Media.Brush)FindResource("PrimaryAccent");
                 BtnLangTR.Foreground = System.Windows.Media.Brushes.White;
                 BtnLangEN.Background = System.Windows.Media.Brushes.Transparent;
-                BtnLangEN.Foreground = new System.Windows.Media.SolidColorBrush((Color)ColorConverter.ConvertFromString("#94A3B8"));
+                BtnLangEN.Foreground = (System.Windows.Media.Brush)FindResource("TextSecondary");
             }
             else
             {
-                BtnLangEN.Background = new System.Windows.Media.SolidColorBrush((Color)ColorConverter.ConvertFromString("#6366F1"));
+                BtnLangEN.Background = (System.Windows.Media.Brush)FindResource("PrimaryAccent");
                 BtnLangEN.Foreground = System.Windows.Media.Brushes.White;
                 BtnLangTR.Background = System.Windows.Media.Brushes.Transparent;
-                BtnLangTR.Foreground = new System.Windows.Media.SolidColorBrush((Color)ColorConverter.ConvertFromString("#94A3B8"));
+                BtnLangTR.Foreground = (System.Windows.Media.Brush)FindResource("TextSecondary");
             }
 
             SetPlaceholder();
@@ -193,29 +292,33 @@ namespace DesktopIconLayoutManager
         private void BtnLangTR_Click(object sender, RoutedEventArgs e)
         {
             LanguageManager.SetLanguage(AppLanguage.TR);
+            _settingsManager.CurrentSettings.Language = "TR";
+            _settingsManager.SaveSettings();
         }
 
         private void BtnLangEN_Click(object sender, RoutedEventArgs e)
         {
             LanguageManager.SetLanguage(AppLanguage.EN);
+            _settingsManager.CurrentSettings.Language = "EN";
+            _settingsManager.SaveSettings();
         }
 
         private void SetPlaceholder()
         {
-            if (string.IsNullOrWhiteSpace(ProfileNameInput.Text) || ProfileNameInput.Text == "Örn: Çalışma Düzeni / Oyun Düzeni" || ProfileNameInput.Text == "e.g. Work Layout / Gaming Layout")
+            if (string.IsNullOrWhiteSpace(ProfileNameInput.Text) || ProfileNameInput.Text.StartsWith("Örn:") || ProfileNameInput.Text.StartsWith("e.g."))
             {
                 ProfileNameInput.Text = LanguageManager.Get("LayoutNamePlaceholder");
-                ProfileNameInput.Foreground = new System.Windows.Media.SolidColorBrush((Color)ColorConverter.ConvertFromString("#94A3B8"));
+                ProfileNameInput.Foreground = (System.Windows.Media.Brush)FindResource("TextSecondary");
             }
         }
 
         private void ProfileNameInput_GotFocus(object sender, RoutedEventArgs e)
         {
             string ph = LanguageManager.Get("LayoutNamePlaceholder");
-            if (ProfileNameInput.Text == ph || ProfileNameInput.Text == "Örn: Çalışma Düzeni / Oyun Düzeni" || ProfileNameInput.Text == "e.g. Work Layout / Gaming Layout")
+            if (ProfileNameInput.Text == ph || ProfileNameInput.Text.StartsWith("Örn:") || ProfileNameInput.Text.StartsWith("e.g."))
             {
                 ProfileNameInput.Text = string.Empty;
-                ProfileNameInput.Foreground = new System.Windows.Media.SolidColorBrush((Color)ColorConverter.ConvertFromString("#F8FAFC"));
+                ProfileNameInput.Foreground = (System.Windows.Media.Brush)FindResource("TextPrimary");
             }
         }
 
@@ -224,6 +327,7 @@ namespace DesktopIconLayoutManager
             SetPlaceholder();
         }
 
+        // ================= STATUS & PROFILES =================
         private void CheckAutoArrangeState()
         {
             IntPtr listViewHandle = DesktopListView.GetHandle();
@@ -231,14 +335,27 @@ namespace DesktopIconLayoutManager
 
             if (isAutoArrange)
             {
-                BadgeDot.Fill = new System.Windows.Media.SolidColorBrush((Color)ColorConverter.ConvertFromString("#EF4444"));
-                BadgeText.Text = LanguageManager.Get("AutoArrangeActive");
+                BadgeDot.Fill = new System.Windows.Media.SolidColorBrush((Color)ColorConverter.ConvertFromString("#F43F5E"));
+                BadgeText.Text = "Auto-Arrange: Aktif";
             }
             else
             {
                 BadgeDot.Fill = new System.Windows.Media.SolidColorBrush((Color)ColorConverter.ConvertFromString("#10B981"));
-                BadgeText.Text = LanguageManager.Get("AutoArrangeDisabled");
+                BadgeText.Text = "Auto-Arrange: Pasif";
             }
+        }
+
+        private void UpdateDisplayInfoUI()
+        {
+            var primary = Screen.PrimaryScreen?.Bounds;
+            if (primary.HasValue)
+            {
+                TxtValPrimaryRes.Text = $"{primary.Value.Width} x {primary.Value.Height}";
+            }
+
+            var virt = SystemInformation.VirtualScreen;
+            TxtValVirtualRes.Text = $"{virt.Width} x {virt.Height} ({virt.Left}, {virt.Top})";
+            TxtValMonitorCount.Text = $"{Screen.AllScreens.Length} Ekran / Monitor";
         }
 
         private void LoadProfiles()
@@ -255,14 +372,13 @@ namespace DesktopIconLayoutManager
         private void ApplyFilter()
         {
             string query = SearchInput.Text?.Trim() ?? string.Empty;
-            if (string.IsNullOrEmpty(query))
-            {
-                ProfilesListView.ItemsSource = _allProfiles;
-            }
-            else
-            {
-                ProfilesListView.ItemsSource = _allProfiles.Where(p => p.Name.Contains(query, StringComparison.OrdinalIgnoreCase)).ToList();
-            }
+            var list = string.IsNullOrEmpty(query) 
+                ? _allProfiles 
+                : _allProfiles.Where(p => p.Name.Contains(query, StringComparison.OrdinalIgnoreCase)).ToList();
+
+            ProfilesListView.ItemsSource = list;
+            TxtCountBadge.Text = $"{list.Count} kayıt";
+            EmptyStatePanel.Visibility = list.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
         }
 
         private void SaveButton_Click(object sender, RoutedEventArgs e)
@@ -359,6 +475,107 @@ namespace DesktopIconLayoutManager
                     LoadProfiles();
                 }
             }
+        }
+
+        // ================= QUICK TOOLS ACTIONS =================
+        private void ToolRefresh_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                IntPtr listView = DesktopListView.GetHandle();
+                if (listView != IntPtr.Zero)
+                {
+                    NativeMethods.SendMessage(listView, NativeMethods.WM_SETREDRAW, IntPtr.Zero, IntPtr.Zero);
+                    NativeMethods.SendMessage(listView, NativeMethods.WM_SETREDRAW, (IntPtr)1, IntPtr.Zero);
+                    NativeMethods.SendMessage(listView, 0x000F /* WM_PAINT */, IntPtr.Zero, IntPtr.Zero);
+                    StatusBarText.Text = "✅ Masaüstü simgeleri ve önbellek yenilendi.";
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Yenileme hatası: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void ToolAutoArrange_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                IntPtr listView = DesktopListView.GetHandle();
+                if (listView != IntPtr.Zero)
+                {
+                    bool current = DesktopListView.IsAutoArrangeEnabled(listView);
+                    DesktopListView.SetAutoArrange(listView, !current);
+                    CheckAutoArrangeState();
+                    StatusBarText.Text = $"Otomatik düzenleme: {(!current ? "Açıldı" : "Kapatıldı")}";
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Hata: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        // ================= SETTINGS ACTIONS =================
+        private void LoadSettingsIntoUI()
+        {
+            var s = _settingsManager.CurrentSettings;
+            ChkStartWithWindows.IsChecked = s.StartWithWindows;
+            ChkMinimizeToTray.IsChecked = s.MinimizeToTray;
+            ChkShowNotifications.IsChecked = s.ShowNotifications;
+            ChkAutoBackup.IsChecked = s.AutoBackupOnResolutionChange;
+        }
+
+        private void SettingChanged(object sender, RoutedEventArgs e)
+        {
+            var s = _settingsManager.CurrentSettings;
+            s.StartWithWindows = ChkStartWithWindows.IsChecked == true;
+            s.MinimizeToTray = ChkMinimizeToTray.IsChecked == true;
+            s.ShowNotifications = ChkShowNotifications.IsChecked == true;
+            s.AutoBackupOnResolutionChange = ChkAutoBackup.IsChecked == true;
+
+            _settingsManager.SaveSettings();
+            StatusBarText.Text = "⚙️ Ayarlar güncellendi.";
+        }
+
+        private void BtnOpenFolder_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                string dir = _storage.GetStorageDirectory();
+                if (Directory.Exists(dir))
+                {
+                    Process.Start("explorer.exe", dir);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Klasör açılamadı: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void BtnClearAll_Click(object sender, RoutedEventArgs e)
+        {
+            var res = MessageBox.Show("Tüm kayıtlı masaüstü düzenlerini kalıcı olarak silmek istediğinize emin misiniz?", 
+                "Tümünü Sıfırla", 
+                MessageBoxButton.YesNo, 
+                MessageBoxImage.Warning);
+
+            if (res == MessageBoxResult.Yes)
+            {
+                _storage.ClearAllProfiles();
+                LoadProfiles();
+                StatusBarText.Text = "⚠️ Tüm profiller temizlendi.";
+            }
+        }
+
+        private void BtnGithub_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                Process.Start(new ProcessStartInfo("https://github.com/TheK3R1M/ReIcon-Pro") { UseShellExecute = true });
+            }
+            catch { }
         }
     }
 }

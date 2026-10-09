@@ -67,5 +67,15 @@ namespace DesktopIconLayoutManager.Core.Engine
             }
             return false;
         }
+
+        public void ClearAllProfiles()
+        {
+            if (!Directory.Exists(_storageDir)) return;
+            string[] files = Directory.GetFiles(_storageDir, "*.json");
+            foreach (var f in files)
+            {
+                try { File.Delete(f); } catch { }
+            }
+        }
     }
 }
