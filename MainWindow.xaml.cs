@@ -54,6 +54,19 @@ namespace DesktopIconLayoutManager
         {
             try
             {
+                Uri iconUri = new Uri("pack://application:,,,/app.ico");
+                var info = System.Windows.Application.GetResourceStream(iconUri);
+                if (info != null && info.Stream != null)
+                {
+                    _notifyIcon.Icon = new Icon(info.Stream);
+                    this.Icon = System.Windows.Media.Imaging.BitmapFrame.Create(iconUri);
+                    return;
+                }
+            }
+            catch { }
+
+            try
+            {
                 string iconPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "app.ico");
                 if (File.Exists(iconPath))
                 {
@@ -67,6 +80,18 @@ namespace DesktopIconLayoutManager
             catch
             {
                 _notifyIcon.Icon = SystemIcons.Application;
+            }
+        }
+
+        private void ShowTrayNotification(string title, string text, ToolTipIcon icon = ToolTipIcon.Info)
+        {
+            try
+            {
+                _notifyIcon.ShowBalloonTip(2000, title, text, icon);
+            }
+            catch
+            {
+                // Safe fallback for Windows 11 notifications
             }
         }
 
@@ -117,7 +142,7 @@ namespace DesktopIconLayoutManager
             if (WindowState == WindowState.Minimized)
             {
                 Hide();
-                _notifyIcon.ShowBalloonTip(2000, "ReIcon Pro", LanguageManager.CurrentLanguage == AppLanguage.TR ? "Uygulama tepsisinde çalışmaya devam ediyor." : "Running in system tray.", ToolTipIcon.Info);
+                ShowTrayNotification("ReIcon Pro", LanguageManager.CurrentLanguage == AppLanguage.TR ? "Uygulama tepsisinde çalışmaya devam ediyor." : "Running in system tray.");
             }
         }
 
@@ -127,7 +152,7 @@ namespace DesktopIconLayoutManager
             {
                 e.Cancel = true;
                 Hide();
-                _notifyIcon.ShowBalloonTip(2000, "ReIcon Pro", LanguageManager.CurrentLanguage == AppLanguage.TR ? "Uygulama arka planda simge durumuna küçültüldü." : "Minimized to system tray.", ToolTipIcon.Info);
+                ShowTrayNotification("ReIcon Pro", LanguageManager.CurrentLanguage == AppLanguage.TR ? "Uygulama arka planda simge durumuna küçültüldü." : "Minimized to system tray.");
             }
         }
 
@@ -264,7 +289,7 @@ namespace DesktopIconLayoutManager
                 _storage.SaveProfile(profile);
 
                 StatusBarText.Text = string.Format(LanguageManager.Get("SaveSuccess"), profile.Name, profile.Icons.Count);
-                _notifyIcon.ShowBalloonTip(2000, "ReIcon Pro", StatusBarText.Text, ToolTipIcon.Info);
+                ShowTrayNotification("ReIcon Pro", StatusBarText.Text, ToolTipIcon.Info);
 
                 ProfileNameInput.Text = string.Empty;
                 SetPlaceholder();
@@ -285,7 +310,7 @@ namespace DesktopIconLayoutManager
             }
             else
             {
-                _notifyIcon.ShowBalloonTip(2000, "ReIcon Pro", LanguageManager.CurrentLanguage == AppLanguage.TR ? "Kayıtlı düzen bulunamadı." : "No saved profiles found.", ToolTipIcon.Warning);
+                ShowTrayNotification("ReIcon Pro", LanguageManager.CurrentLanguage == AppLanguage.TR ? "Kayıtlı düzen bulunamadı." : "No saved profiles found.", ToolTipIcon.Warning);
             }
         }
 
@@ -307,7 +332,7 @@ namespace DesktopIconLayoutManager
                 if (success)
                 {
                     StatusBarText.Text = string.Format(LanguageManager.Get("RestoreSuccess"), profile.Name, msg);
-                    _notifyIcon.ShowBalloonTip(2000, "ReIcon Pro", StatusBarText.Text, ToolTipIcon.Info);
+                    ShowTrayNotification("ReIcon Pro", StatusBarText.Text, ToolTipIcon.Info);
                     MessageBox.Show(StatusBarText.Text, "ReIcon Pro", MessageBoxButton.OK, MessageBoxImage.Information);
                 }
                 else
