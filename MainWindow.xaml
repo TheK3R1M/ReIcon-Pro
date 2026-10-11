@@ -3,8 +3,8 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         x:Name="RootWindow"
         Title="ReIcon Pro - Desktop Icon &amp; Layout Manager" 
-        Height="680" Width="980"
-        MinHeight="580" MinWidth="850"
+        Height="700" Width="1020"
+        MinHeight="600" MinWidth="880"
         WindowStartupLocation="CenterScreen"
         Background="{StaticResource BgDark}"
         Foreground="{StaticResource TextPrimary}"
@@ -35,12 +35,12 @@
                 <!-- App Branding -->
                 <StackPanel Grid.Row="0" Margin="4,0,4,24">
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                        <Border Width="40" Height="40" CornerRadius="10" Background="#1E293B" BorderBrush="{StaticResource PrimaryAccent}" BorderThickness="1.5" Margin="0,0,12,0">
+                        <Border Width="42" Height="42" CornerRadius="10" Background="#1E293B" BorderBrush="{StaticResource PrimaryAccent}" BorderThickness="1.5" Margin="0,0,12,0">
                             <Image x:Name="ImgAppLogo" Source="app_icon.png" Margin="4" RenderOptions.BitmapScalingMode="HighQuality"/>
                         </Border>
                         <StackPanel VerticalAlignment="Center">
                             <TextBlock Text="ReIcon Pro" FontSize="18" FontWeight="Bold" Foreground="{StaticResource TextPrimary}"/>
-                            <TextBlock Text="v2.0 Fluent Glass" FontSize="11" Foreground="{StaticResource CyanAccent}" FontWeight="SemiBold"/>
+                            <TextBlock Text="v2.1 Power Edition" FontSize="11" Foreground="{StaticResource CyanAccent}" FontWeight="SemiBold"/>
                         </StackPanel>
                     </StackPanel>
                 </StackPanel>
@@ -131,7 +131,7 @@
                 <Grid.RowDefinitions>
                     <!-- Header Bar -->
                     <RowDefinition Height="Auto"/>
-                    <!-- Create Layout Card -->
+                    <!-- Create / Update Layout Toolbar Card -->
                     <RowDefinition Height="Auto"/>
                     <!-- Search & Filter Bar -->
                     <RowDefinition Height="Auto"/>
@@ -142,10 +142,10 @@
                 <!-- Top Page Header -->
                 <StackPanel Grid.Row="0" Margin="0,0,0,16">
                     <TextBlock x:Name="TxtProfilesHeader" Text="Kayıtlı Masaüstü Düzenleri" FontSize="20" FontWeight="Bold" Foreground="{StaticResource TextPrimary}"/>
-                    <TextBlock x:Name="TxtProfilesSubheader" Text="Masaüstü simge yerleşimlerinizi kaydedin ve dilediğiniz an geri yükleyin." FontSize="12" Foreground="{StaticResource TextSecondary}" Margin="0,3,0,0"/>
+                    <TextBlock x:Name="TxtProfilesSubheader" Text="Masaüstü simge yerleşimlerinizi kaydedin, güncelleyin veya anında geri yükleyin." FontSize="12" Foreground="{StaticResource TextSecondary}" Margin="0,3,0,0"/>
                 </StackPanel>
 
-                <!-- New Profile Capture Card -->
+                <!-- Profile Action Toolbar Card -->
                 <Border Grid.Row="1" Background="{StaticResource CardBg}" CornerRadius="12" Padding="16" Margin="0,0,0,16" BorderBrush="{StaticResource CardBorder}" BorderThickness="1">
                     <Grid>
                         <Grid.ColumnDefinitions>
@@ -153,8 +153,9 @@
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
 
-                        <StackPanel Grid.Column="0" Margin="0,0,12,0">
-                            <TextBlock x:Name="TxtNewLayoutTitle" Text="Yeni Düzen Oluştur" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource TextPrimary}" Margin="0,0,0,8"/>
+                        <!-- Input for New / Update Profile Name -->
+                        <StackPanel Grid.Column="0" Margin="0,0,14,0">
+                            <TextBlock x:Name="TxtNewLayoutTitle" Text="Yeni Düzen Oluştur veya Seçiliyi Güncelle" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource TextPrimary}" Margin="0,0,0,8"/>
                             <TextBox x:Name="ProfileNameInput" Height="40" Padding="12,9" FontSize="13" 
                                      Background="#0B0F19" Foreground="{StaticResource TextPrimary}" 
                                      BorderBrush="{StaticResource CardBorder}" BorderThickness="1"
@@ -163,12 +164,22 @@
                             </TextBox>
                         </StackPanel>
 
-                        <Button Grid.Column="1" x:Name="SaveButton" Content="📸 Düzeni Kaydet" Height="40" Width="160" 
-                                VerticalAlignment="Bottom" FontWeight="Bold" FontSize="13"
-                                Background="{StaticResource PrimaryAccent}" Foreground="White" BorderThickness="0"
-                                Cursor="Hand" Click="SaveButton_Click">
-                            <Button.Resources><Style TargetType="Border"><Setter Property="CornerRadius" Value="8"/></Style></Button.Resources>
-                        </Button>
+                        <!-- Toolbar Action Buttons -->
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Bottom">
+                            <!-- Update Selected Profile (ReIcon Overwrite feature) -->
+                            <Button x:Name="BtnUpdateSelected" Content="🔄 Seçiliyi Güncelle" Height="40" Padding="14,0" Margin="0,0,8,0"
+                                    FontWeight="Bold" FontSize="12" Background="#1E3A8A" Foreground="#93C5FD" BorderBrush="#3B82F6" BorderThickness="1"
+                                    Cursor="Hand" ToolTip="Seçili profili mevcut masaüstü simgeleriyle günceller (üzerine yazar)" Click="BtnUpdateSelected_Click">
+                                <Button.Resources><Style TargetType="Border"><Setter Property="CornerRadius" Value="8"/></Style></Button.Resources>
+                            </Button>
+
+                            <!-- Save New Snapshot -->
+                            <Button x:Name="SaveButton" Content="📸 Yeni Kaydet" Height="40" Padding="16,0" 
+                                    FontWeight="Bold" FontSize="13" Background="{StaticResource PrimaryAccent}" Foreground="White" BorderThickness="0"
+                                    Cursor="Hand" Click="SaveButton_Click">
+                                <Button.Resources><Style TargetType="Border"><Setter Property="CornerRadius" Value="8"/></Style></Button.Resources>
+                            </Button>
+                        </StackPanel>
                     </Grid>
                 </Border>
 
@@ -184,6 +195,8 @@
                         <Border x:Name="ProfileCountChip" Background="#1E293B" CornerRadius="10" Padding="8,3" Margin="8,0,0,0" BorderBrush="{StaticResource CardBorder}" BorderThickness="1">
                             <TextBlock x:Name="TxtCountBadge" Text="0 kayıt" FontSize="11" Foreground="{StaticResource CyanAccent}" FontWeight="Bold"/>
                         </Border>
+                        <TextBlock Text="💡 İpucu: Çift tıklayarak anında geri yükleyebilir veya sağ tıklayarak ek seçeneklere ulaşabilirsiniz." 
+                                   FontSize="11" Foreground="{StaticResource TextMuted}" Margin="16,0,0,0" VerticalAlignment="Center"/>
                     </StackPanel>
 
                     <!-- Instant Search Box -->
@@ -203,10 +216,11 @@
                 <!-- Profile Cards Container -->
                 <Border Grid.Row="3" Background="{StaticResource CardBg}" CornerRadius="12" BorderBrush="{StaticResource CardBorder}" BorderThickness="1" Padding="8">
                     <Grid>
-                        <!-- Profiles ListView -->
+                        <!-- Profiles ListView with Full Context Menu & Actions -->
                         <ListView x:Name="ProfilesListView" Background="Transparent" BorderThickness="0"
                                   ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                                  ScrollViewer.VerticalScrollBarVisibility="Auto">
+                                  ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                  SelectionChanged="ProfilesListView_SelectionChanged">
                             <ListView.ItemContainerStyle>
                                 <Style TargetType="ListViewItem">
                                     <Setter Property="HorizontalContentAlignment" Value="Stretch" />
@@ -214,6 +228,7 @@
                                     <Setter Property="Margin" Value="0,0,0,8" />
                                     <Setter Property="Background" Value="Transparent" />
                                     <Setter Property="BorderThickness" Value="0" />
+                                    <EventSetter Event="MouseDoubleClick" Handler="ProfileItem_MouseDoubleClick"/>
                                     <Setter Property="Template">
                                         <Setter.Value>
                                             <ControlTemplate TargetType="ListViewItem">
@@ -225,8 +240,20 @@
                             </ListView.ItemContainerStyle>
                             <ListView.ItemTemplate>
                                 <DataTemplate>
-                                    <!-- Modern Profile Card -->
+                                    <!-- Modern Profile Card with ContextMenu -->
                                     <Border Background="#141E2E" CornerRadius="10" Padding="14,12" BorderBrush="#253347" BorderThickness="1">
+                                        <Border.ContextMenu>
+                                            <ContextMenu Background="#1E293B" Foreground="{StaticResource TextPrimary}" BorderBrush="{StaticResource CardBorder}">
+                                                <MenuItem Header="⚡ Geri Yükle" Click="CtxRestore_Click"/>
+                                                <MenuItem Header="🔄 Mevcut Masaüstü ile Güncelle (Üzerine Yaz)" Click="CtxUpdate_Click"/>
+                                                <MenuItem Header="✏️ Yeniden Adlandır" Click="CtxRename_Click"/>
+                                                <MenuItem Header="📋 Klonla / Çoğalt" Click="CtxDuplicate_Click"/>
+                                                <Separator Background="#334155"/>
+                                                <MenuItem Header="🖥️ Masaüstü Kısayolu Oluştur" Click="CtxCreateShortcut_Click"/>
+                                                <Separator Background="#334155"/>
+                                                <MenuItem Header="🗑️ Sil" Click="CtxDelete_Click"/>
+                                            </ContextMenu>
+                                        </Border.ContextMenu>
                                         <Grid>
                                             <Grid.ColumnDefinitions>
                                                 <!-- Info Section -->
@@ -261,17 +288,33 @@
                                                 </StackPanel>
                                             </StackPanel>
 
-                                            <!-- Actions (Restore & Delete) -->
+                                            <!-- Fast Action Buttons on Card -->
                                             <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                                                <Button Content="⚡ Yükle" Height="34" Padding="14,0" Margin="0,0,8,0" FontSize="12" FontWeight="Bold"
+                                                <!-- Restore Button -->
+                                                <Button Content="⚡ Yükle" Height="34" Padding="12,0" Margin="0,0,6,0" FontSize="11" FontWeight="Bold"
                                                         Background="{StaticResource SuccessAccent}" Foreground="White" BorderThickness="0" Cursor="Hand"
-                                                        Tag="{Binding}" Click="RestoreButton_Click">
+                                                        Tag="{Binding}" Click="RestoreButton_Click" ToolTip="Bu düzeni masaüstüne geri yükle">
                                                     <Button.Resources><Style TargetType="Border"><Setter Property="CornerRadius" Value="8"/></Style></Button.Resources>
                                                 </Button>
 
-                                                <Button Content="🗑️ Sil" Height="34" Padding="12,0" FontSize="12" FontWeight="Bold"
+                                                <!-- Update / Overwrite Button -->
+                                                <Button Content="🔄 Güncelle" Height="34" Padding="10,0" Margin="0,0,6,0" FontSize="11" FontWeight="Bold"
+                                                        Background="#1E3A8A" Foreground="#93C5FD" BorderThickness="0" Cursor="Hand"
+                                                        Tag="{Binding}" Click="UpdateButton_Click" ToolTip="Bu profili şu anki masaüstü simgeleriyle güncelle (üzerine yaz)">
+                                                    <Button.Resources><Style TargetType="Border"><Setter Property="CornerRadius" Value="8"/></Style></Button.Resources>
+                                                </Button>
+
+                                                <!-- Rename Button -->
+                                                <Button Content="✏️" Height="34" Width="34" Margin="0,0,6,0" FontSize="11" FontWeight="Bold"
+                                                        Background="#1E293B" Foreground="{StaticResource TextPrimary}" BorderBrush="{StaticResource CardBorder}" BorderThickness="1"
+                                                        Cursor="Hand" Tag="{Binding}" Click="RenameButton_Click" ToolTip="Profili yeniden adlandır">
+                                                    <Button.Resources><Style TargetType="Border"><Setter Property="CornerRadius" Value="8"/></Style></Button.Resources>
+                                                </Button>
+
+                                                <!-- Delete Button -->
+                                                <Button Content="🗑️" Height="34" Width="34" FontSize="11" FontWeight="Bold"
                                                         Background="{StaticResource DangerAccent}" Foreground="White" BorderThickness="0" Cursor="Hand"
-                                                        Tag="{Binding}" Click="DeleteButton_Click">
+                                                        Tag="{Binding}" Click="DeleteButton_Click" ToolTip="Profili sil">
                                                     <Button.Resources><Style TargetType="Border"><Setter Property="CornerRadius" Value="8"/></Style></Button.Resources>
                                                 </Button>
                                             </StackPanel>
@@ -471,7 +514,7 @@
                         </Border>
 
                         <TextBlock Text="ReIcon Pro" FontSize="24" FontWeight="Bold" Foreground="{StaticResource TextPrimary}" HorizontalAlignment="Center"/>
-                        <TextBlock x:Name="TxtAboutVersion" Text="Sürüm 2.0.0 (Fluent Glass Edition)" FontSize="13" Foreground="{StaticResource CyanAccent}" FontWeight="SemiBold" HorizontalAlignment="Center" Margin="0,4,0,12"/>
+                        <TextBlock x:Name="TxtAboutVersion" Text="Sürüm 2.1.0 (Power Edition)" FontSize="13" Foreground="{StaticResource CyanAccent}" FontWeight="SemiBold" HorizontalAlignment="Center" Margin="0,4,0,12"/>
 
                         <TextBlock x:Name="TxtAboutDesc" Text="Windows 10 ve 11 için geliştirilmiş, hafif, taşınabilir ve sıfır bağımlılıklı masaüstü simge yöneticisi." 
                                    TextWrapping="Wrap" TextAlignment="Center" FontSize="13" Foreground="{StaticResource TextSecondary}" Margin="0,0,0,20"/>
@@ -497,7 +540,7 @@
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
                     <TextBlock x:Name="StatusBarText" Text="Hazır." FontSize="12" Foreground="{StaticResource TextSecondary}" VerticalAlignment="Center"/>
-                    <TextBlock Grid.Column="1" Text="ReIcon Pro v2.0 • Fluent Edition" FontSize="11" Foreground="{StaticResource TextMuted}" VerticalAlignment="Center"/>
+                    <TextBlock Grid.Column="1" Text="ReIcon Pro v2.1 • Power Edition" FontSize="11" Foreground="{StaticResource TextMuted}" VerticalAlignment="Center"/>
                 </Grid>
             </Border>
         </Grid>

@@ -28,12 +28,30 @@ namespace DesktopIconLayoutManager.Core.Localization
             // Profiles View
             ["NewLayoutTitle"] = ("Yeni Düzen Oluştur", "Create New Layout"),
             ["LayoutNamePlaceholder"] = ("Örn: İş Düzeni / Oyun Modu", "e.g. Work Layout / Gaming Mode"),
-            ["SaveButton"] = ("📸 Düzeni Kaydet", "📸 Save Layout"),
+            ["SaveButton"] = ("📸 Yeni Kaydet", "📸 Save New"),
+            ["UpdateSelectedButton"] = ("🔄 Seçiliyi Güncelle", "🔄 Update Selected"),
             ["SearchPlaceholder"] = ("Düzen adında ara...", "Search layout names..."),
             ["SavedProfilesTitle"] = ("Kayıtlı Masaüstü Düzenleri", "Saved Desktop Layouts"),
             ["BtnRestore"] = ("⚡ Yükle", "⚡ Restore"),
+            ["BtnUpdate"] = ("🔄 Güncelle", "🔄 Update"),
             ["BtnDelete"] = ("🗑️ Sil", "🗑️ Delete"),
-            ["EmptyProfiles"] = ("Henüz kayıtlı bir masaüstü düzeni yok. Yukarıdan 'Düzeni Kaydet' butonuna basarak ilk profilinizi oluşturun.", "No saved layouts yet. Click 'Save Layout' above to capture your first layout."),
+            ["EmptyProfiles"] = ("Henüz kayıtlı bir masaüstü düzeni yok. Yukarıdan 'Yeni Kaydet' butonuna basarak ilk profilinizi oluşturun.", "No saved layouts yet. Click 'Save New' above to capture your first layout."),
+
+            // Context Menu Items
+            ["CtxRestore"] = ("⚡ Geri Yükle", "⚡ Restore"),
+            ["CtxUpdate"] = ("🔄 Mevcut Masaüstü ile Güncelle (Üzerine Yaz)", "🔄 Overwrite with Current Desktop"),
+            ["CtxRename"] = ("✏️ Yeniden Adlandır", "✏️ Rename"),
+            ["CtxDuplicate"] = ("📋 Çoğalt / Klonla", "📋 Duplicate"),
+            ["CtxCreateShortcut"] = ("🖥️ Masaüstü Kısayolu Oluştur", "🖥️ Create Desktop Shortcut"),
+            ["CtxDelete"] = ("🗑️ Sil", "🗑️ Delete"),
+
+            // Prompts & Dialogs
+            ["RenamePromptTitle"] = ("Yeniden Adlandır", "Rename Profile"),
+            ["RenamePromptMsg"] = ("Lütfen düzen için yeni bir ad girin:", "Please enter a new name for the layout:"),
+            ["UpdateConfirmTitle"] = ("Profili Güncelle", "Update Profile"),
+            ["UpdateConfirmMsg"] = ("'{0}' profili şu anki masaüstü simge konumları ile güncellensin mi?", "Do you want to overwrite '{0}' with current desktop icon positions?"),
+            ["UpdateSuccess"] = ("✅ '{0}' profili başarıyla güncellendi ({1} simge).", "✅ Profile '{0}' successfully updated ({1} icons)."),
+            ["ShortcutCreated"] = ("🖥️ '{0}' için masaüstüne kısayol oluşturuldu.", "🖥️ Desktop shortcut created for '{0}'."),
 
             // Quick Tools View
             ["ToolsTitle"] = ("Masaüstü & Ekran Araçları", "Desktop & Display Tools"),
@@ -49,7 +67,7 @@ namespace DesktopIconLayoutManager.Core.Localization
 
             // Settings View
             ["SettingsTitle"] = ("Uygulama Ayarları", "Application Settings"),
-            ["SettingsSubtitle"] = ("ReIcon Pro davranışlarını ve başlangıç tercihlerini yapılandırın.", "Configure ReIcon Pro startup preferences and behavior."),
+            ["SettingsSubtitle"] = ("ReIcon Pro başlangıç ve davranış tercihlerini yapılandırın.", "Configure ReIcon Pro startup preferences and behavior."),
             ["SettingStartWithWindows"] = ("Windows Başlangıcında Çalıştır", "Start with Windows"),
             ["DescStartWithWindows"] = ("Bilgisayar her açıldığında ReIcon Pro arka planda otomatik başlasın.", "Automatically start ReIcon Pro in the background on system boot."),
             ["SettingMinimizeToTray"] = ("Kapatınca Sistem Tepsisine Küçült", "Minimize to System Tray on Close"),
@@ -64,7 +82,7 @@ namespace DesktopIconLayoutManager.Core.Localization
             // About View
             ["AboutTitle"] = ("ReIcon Pro Hakkında", "About ReIcon Pro"),
             ["AboutDesc"] = ("Windows 10 ve 11 için geliştirilmiş, hafif, taşınabilir ve sıfır bağımlılıklı masaüstü simge yöneticisi.", "Lightweight, portable, and zero-dependency desktop icon layout manager for Windows 10 & 11."),
-            ["AboutVersion"] = ("Sürüm: 2.0.0 (Fluent Glass Edition)", "Version: 2.0.0 (Fluent Glass Edition)"),
+            ["AboutVersion"] = ("Sürüm: 2.1.0 (Power Edition)", "Version: 2.1.0 (Power Edition)"),
             ["AboutDev"] = ("Geliştirici: TheK3R1M", "Developer: TheK3R1M"),
             ["BtnGithub"] = ("🌐 GitHub Repository", "🌐 GitHub Repository"),
 

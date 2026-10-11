@@ -8,6 +8,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Forms;
 using DesktopIconLayoutManager.Core.Engine;
+using DesktopIconLayoutManager.Core.Helpers;
 using DesktopIconLayoutManager.Core.Localization;
 using DesktopIconLayoutManager.Core.Models;
 using DesktopIconLayoutManager.Core.Win32;
@@ -37,7 +38,7 @@ namespace DesktopIconLayoutManager
             // Setup System Tray
             _notifyIcon = new NotifyIcon
             {
-                Text = "ReIcon Pro v2.0",
+                Text = "ReIcon Pro v2.1",
                 Visible = true
             };
 
@@ -173,26 +174,10 @@ namespace DesktopIconLayoutManager
         }
 
         // ================= NAVIGATION SWITCHING =================
-        private void NavBtnProfiles_Click(object sender, RoutedEventArgs e)
-        {
-            SwitchTab(0);
-        }
-
-        private void NavBtnTools_Click(object sender, RoutedEventArgs e)
-        {
-            SwitchTab(1);
-            UpdateDisplayInfoUI();
-        }
-
-        private void NavBtnSettings_Click(object sender, RoutedEventArgs e)
-        {
-            SwitchTab(2);
-        }
-
-        private void NavBtnAbout_Click(object sender, RoutedEventArgs e)
-        {
-            SwitchTab(3);
-        }
+        private void NavBtnProfiles_Click(object sender, RoutedEventArgs e) => SwitchTab(0);
+        private void NavBtnTools_Click(object sender, RoutedEventArgs e) { SwitchTab(1); UpdateDisplayInfoUI(); }
+        private void NavBtnSettings_Click(object sender, RoutedEventArgs e) => SwitchTab(2);
+        private void NavBtnAbout_Click(object sender, RoutedEventArgs e) => SwitchTab(3);
 
         private void SwitchTab(int tabIndex)
         {
@@ -222,20 +207,18 @@ namespace DesktopIconLayoutManager
         // ================= LOCALIZATION =================
         private void RefreshLocalizedUI()
         {
-            // Navigation
             TxtNavProfiles.Text = LanguageManager.Get("NavProfiles");
             TxtNavTools.Text = LanguageManager.Get("NavTools");
             TxtNavSettings.Text = LanguageManager.Get("NavSettings");
             TxtNavAbout.Text = LanguageManager.Get("NavAbout");
 
-            // Profiles Page
             TxtProfilesHeader.Text = LanguageManager.Get("SavedProfilesTitle");
             TxtNewLayoutTitle.Text = LanguageManager.Get("NewLayoutTitle");
             SaveButton.Content = LanguageManager.Get("SaveButton");
+            BtnUpdateSelected.Content = LanguageManager.Get("UpdateSelectedButton");
             TxtSavedLayoutsCount.Text = LanguageManager.Get("NavProfiles");
             TxtEmptyNotice.Text = LanguageManager.Get("EmptyProfiles");
 
-            // Tools Page
             TxtToolsHeader.Text = LanguageManager.Get("ToolsTitle");
             TxtToolsSubheader.Text = LanguageManager.Get("ToolsSubtitle");
             TxtToolRefreshTitle.Text = LanguageManager.Get("BtnDesktopRefresh");
@@ -247,7 +230,6 @@ namespace DesktopIconLayoutManager
             TxtLblVirtualRes.Text = LanguageManager.Get("VirtualRes");
             TxtLblMonitorCount.Text = LanguageManager.Get("MonitorCount");
 
-            // Settings Page
             TxtSettingsHeader.Text = LanguageManager.Get("SettingsTitle");
             TxtSettingsSubheader.Text = LanguageManager.Get("SettingsSubtitle");
             TxtSettingStartTitle.Text = LanguageManager.Get("SettingStartWithWindows");
@@ -261,12 +243,10 @@ namespace DesktopIconLayoutManager
             BtnOpenFolder.Content = LanguageManager.Get("BtnOpenFolder");
             BtnClearAll.Content = LanguageManager.Get("BtnClearAll");
 
-            // About Page
             TxtAboutVersion.Text = LanguageManager.Get("AboutVersion");
             TxtAboutDesc.Text = LanguageManager.Get("AboutDesc");
             TxtAboutDev.Text = LanguageManager.Get("AboutDev");
 
-            // Status Bar
             StatusBarText.Text = LanguageManager.Get("StatusReady");
 
             if (LanguageManager.CurrentLanguage == AppLanguage.TR)
@@ -322,10 +302,7 @@ namespace DesktopIconLayoutManager
             }
         }
 
-        private void ProfileNameInput_LostFocus(object sender, RoutedEventArgs e)
-        {
-            SetPlaceholder();
-        }
+        private void ProfileNameInput_LostFocus(object sender, RoutedEventArgs e) => SetPlaceholder();
 
         // ================= STATUS & PROFILES =================
         private void CheckAutoArrangeState()
@@ -364,10 +341,7 @@ namespace DesktopIconLayoutManager
             ApplyFilter();
         }
 
-        private void SearchInput_TextChanged(object sender, TextChangedEventArgs e)
-        {
-            ApplyFilter();
-        }
+        private void SearchInput_TextChanged(object sender, TextChangedEventArgs e) => ApplyFilter();
 
         private void ApplyFilter()
         {
@@ -381,17 +355,100 @@ namespace DesktopIconLayoutManager
             EmptyStatePanel.Visibility = list.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
         }
 
+        private void ProfilesListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (ProfilesListView.SelectedItem is IconLayoutProfile p)
+            {
+                ProfileNameInput.Text = p.Name;
+                ProfileNameInput.Foreground = (System.Windows.Media.Brush)FindResource("TextPrimary");
+            }
+        }
+
+        private void ProfileItem_MouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            if (ProfilesListView.SelectedItem is IconLayoutProfile profile)
+            {
+                PerformRestore(profile);
+            }
+        }
+
+        // ================= PROFILE ACTIONS (SAVE / UPDATE / RESTORE / RENAME / DELETE) =================
         private void SaveButton_Click(object sender, RoutedEventArgs e)
         {
-            PerformSave(ProfileNameInput.Text);
+            PerformSaveNew(ProfileNameInput.Text);
         }
 
-        private void QuickSaveFromTray()
+        private void BtnUpdateSelected_Click(object sender, RoutedEventArgs e)
         {
-            PerformSave(string.Empty);
+            if (ProfilesListView.SelectedItem is IconLayoutProfile profile)
+            {
+                PerformOverwrite(profile);
+            }
+            else
+            {
+                MessageBox.Show("Lütfen önce güncellenecek profili listeden seçin.", "ReIcon Pro", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
         }
 
-        private void PerformSave(string customName)
+        private void UpdateButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button btn && btn.Tag is IconLayoutProfile profile)
+            {
+                PerformOverwrite(profile);
+            }
+        }
+
+        private void PerformOverwrite(IconLayoutProfile profile)
+        {
+            string confirmMsg = string.Format(LanguageManager.Get("UpdateConfirmMsg"), profile.Name);
+            var result = MessageBox.Show(confirmMsg, LanguageManager.Get("UpdateConfirmTitle"), MessageBoxButton.YesNo, MessageBoxImage.Question);
+            if (result != MessageBoxResult.Yes) return;
+
+            try
+            {
+                var freshProfile = _engine.CaptureCurrentLayout(profile.Name);
+                freshProfile.Id = profile.Id; // Keep existing ID
+                freshProfile.CreatedAt = DateTime.Now; // Update timestamp
+
+                _storage.SaveProfile(freshProfile);
+
+                StatusBarText.Text = string.Format(LanguageManager.Get("UpdateSuccess"), freshProfile.Name, freshProfile.Icons.Count);
+                ShowTrayNotification("ReIcon Pro", StatusBarText.Text, ToolTipIcon.Info);
+                LoadProfiles();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Güncelleme hatası: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void RenameButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button btn && btn.Tag is IconLayoutProfile profile)
+            {
+                PerformRename(profile);
+            }
+        }
+
+        private void PerformRename(IconLayoutProfile profile)
+        {
+            string? newName = PromptDialog.Show(LanguageManager.Get("RenamePromptTitle"), 
+                                                LanguageManager.Get("RenamePromptMsg"), 
+                                                profile.Name, 
+                                                this);
+
+            if (!string.IsNullOrWhiteSpace(newName) && newName != profile.Name)
+            {
+                profile.Name = newName;
+                _storage.SaveProfile(profile);
+                StatusBarText.Text = $"✏️ Profil yeniden adlandırıldı: '{newName}'";
+                LoadProfiles();
+            }
+        }
+
+        private void QuickSaveFromTray() => PerformSaveNew(string.Empty);
+
+        private void PerformSaveNew(string customName)
         {
             try
             {
@@ -467,14 +524,100 @@ namespace DesktopIconLayoutManager
         {
             if (sender is Button btn && btn.Tag is IconLayoutProfile profile)
             {
-                var result = MessageBox.Show(string.Format(LanguageManager.Get("DeleteConfirmMsg"), profile.Name), LanguageManager.Get("DeleteConfirmTitle"), MessageBoxButton.YesNo, MessageBoxImage.Question);
-                if (result == MessageBoxResult.Yes)
+                PerformDelete(profile);
+            }
+        }
+
+        private void PerformDelete(IconLayoutProfile profile)
+        {
+            var result = MessageBox.Show(string.Format(LanguageManager.Get("DeleteConfirmMsg"), profile.Name), 
+                                         LanguageManager.Get("DeleteConfirmTitle"), 
+                                         MessageBoxButton.YesNo, 
+                                         MessageBoxImage.Question);
+            if (result == MessageBoxResult.Yes)
+            {
+                _storage.DeleteProfile(profile.Id);
+                StatusBarText.Text = string.Format(LanguageManager.Get("DeleteSuccess"), profile.Name);
+                LoadProfiles();
+            }
+        }
+
+        // ================= CONTEXT MENU HANDLERS =================
+        private IconLayoutProfile? GetContextMenuTarget(object sender)
+        {
+            if (sender is System.Windows.Controls.MenuItem mi && mi.Parent is System.Windows.Controls.ContextMenu cm && cm.PlacementTarget is FrameworkElement fe)
+            {
+                return fe.DataContext as IconLayoutProfile;
+            }
+            return ProfilesListView.SelectedItem as IconLayoutProfile;
+        }
+
+        private void CtxRestore_Click(object sender, RoutedEventArgs e)
+        {
+            var target = GetContextMenuTarget(sender);
+            if (target != null) PerformRestore(target);
+        }
+
+        private void CtxUpdate_Click(object sender, RoutedEventArgs e)
+        {
+            var target = GetContextMenuTarget(sender);
+            if (target != null) PerformOverwrite(target);
+        }
+
+        private void CtxRename_Click(object sender, RoutedEventArgs e)
+        {
+            var target = GetContextMenuTarget(sender);
+            if (target != null) PerformRename(target);
+        }
+
+        private void CtxDuplicate_Click(object sender, RoutedEventArgs e)
+        {
+            var target = GetContextMenuTarget(sender);
+            if (target != null)
+            {
+                var clone = new IconLayoutProfile
                 {
-                    _storage.DeleteProfile(profile.Id);
-                    StatusBarText.Text = string.Format(LanguageManager.Get("DeleteSuccess"), profile.Name);
-                    LoadProfiles();
+                    Id = Guid.NewGuid().ToString(),
+                    Name = $"{target.Name} (Kopya)",
+                    CreatedAt = DateTime.Now,
+                    ScreenWidth = target.ScreenWidth,
+                    ScreenHeight = target.ScreenHeight,
+                    VirtualScreenLeft = target.VirtualScreenLeft,
+                    VirtualScreenTop = target.VirtualScreenTop,
+                    VirtualScreenWidth = target.VirtualScreenWidth,
+                    VirtualScreenHeight = target.VirtualScreenHeight,
+                    MonitorCount = target.MonitorCount,
+                    Icons = target.Icons.Select(i => new DesktopIconItem { Name = i.Name, X = i.X, Y = i.Y, MonitorIndex = i.MonitorIndex }).ToList()
+                };
+                _storage.SaveProfile(clone);
+                StatusBarText.Text = $"📋 '{clone.Name}' çoğaltıldı.";
+                LoadProfiles();
+            }
+        }
+
+        private void CtxCreateShortcut_Click(object sender, RoutedEventArgs e)
+        {
+            var target = GetContextMenuTarget(sender);
+            if (target != null)
+            {
+                if (ShortcutHelper.CreateDesktopShortcut(target.Name, out string scPath))
+                {
+                    string msg = string.Format(LanguageManager.Get("ShortcutCreated"), target.Name);
+                    StatusBarText.Text = msg;
+                    ShowTrayNotification("ReIcon Pro", msg, ToolTipIcon.Info);
+                    MessageBox.Show(msg, "ReIcon Pro", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+                else
+                {
+                    MessageBox.Show("Kısayol oluşturulamadı.", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
+        }
+
+        private void CtxDelete_Click(object sender, RoutedEventArgs e)
+        {
+            var target = GetContextMenuTarget(sender);
+            if (target != null) PerformDelete(target);
         }
 
         // ================= QUICK TOOLS ACTIONS =================
